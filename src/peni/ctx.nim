@@ -27,3 +27,4 @@ iterator peCtx*(files: seq[string], recursive = false): pe_ctx_t =
       for fn in walkFiles(path):
         if not getCtx(ctx, fn): continue
         yield ctx
+    discard pe_unload(addr ctx)

@@ -10,4 +10,4 @@ bin           = @["peni"]
 
 # Dependencies
 
-requires "nim >= 1.6.4, libpe >= 0.1.0, cligen >= 1.5.24"
+requires "nim >= 1.6.4, libpe >= 0.1.0, cligen >= 1.5.24, colorize >= 0.2.0"
