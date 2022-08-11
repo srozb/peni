@@ -13,7 +13,13 @@ dispatchMulti(
       "imports": "in imports",
       "exports": "in exports",
       "pattern": "pattern to match with"
+    }, short={
+      "imports": 'I',
+      "exports": 'E'
     }],
-    [hash],
+    [hash, short={
+      "sha256": 'S',
+      "ssdeep": 'd'
+    }],
     [entropy]
   )

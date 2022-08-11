@@ -4,6 +4,7 @@ import strformat
 import ctx
 
 proc entropy*(threshold = 0.0, recursive = false, files: seq[string]) =
+  ## Calculate file entropy (only for PE files).
   for c in files.peCtx(recursive=recursive):
     var ctx = c
     let ent = pe_calculate_entropy_file(addr ctx)
