@@ -2,9 +2,8 @@ import libpe
 import libpe/imports
 import libpe/exports
 import strformat
-import strutils
 import std/re
-import colorize
+import termstyle
 
 import ctx
 
@@ -16,14 +15,14 @@ proc matchImports(ctx: var pe_ctx_t, cPattern: Regex, ignoreCase: bool) =
       let qName = fmt"{imp.name}!{fun.name}"
       if qName.contains(cPattern):
         var msg = fmt"{ctx.path}:{qName} (import)"
-        if COLOR: msg = msg.replacef(cPattern, "$1".fgRed)
+        if COLOR: msg = msg.replacef(cPattern, "$1".red)
         echo msg
 
 proc matchExports(ctx: var pe_ctx_t, cPattern: Regex, ignoreCase: bool) = 
   for exp in pe_exports(addr ctx).items:
     if ($exp.name).contains(cPattern):
-      var msg = fmt"{ctx.path},{exp.address:#x}:{exp.name} (export)"
-      if COLOR: msg = msg.replacef(cPattern, "$1".fgRed)
+      var msg = fmt"{ctx.path}," & fmt"{exp.address:#x}".blue & fmt":{exp.name} (export)"
+      if COLOR: msg = msg.replacef(cPattern, "$1".red)
       echo msg
 
 proc grep*(ignoreCase = false, imports = false, exports = false, pattern = "", 

@@ -19,6 +19,7 @@ iterator peCtx*(files: seq[string], recursive = false): pe_ctx_t =
     if path.fileExists:
       if not getCtx(ctx, path): raise newException(IOError, path & ": unable to read.")
       yield ctx
+      continue
     if recursive:
       for fn in walkDirRec(path):
         if not getCtx(ctx, fn): continue
