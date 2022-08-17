@@ -8,7 +8,11 @@ import peni/cmdEntropy
 
 
 dispatchMulti(
-    [info],
+    [info, short = {
+      "headers": 'H',
+      "sections": 'S'
+    }
+    ],
     [grep, help={
       "imports": "in imports",
       "exports": "in exports",
