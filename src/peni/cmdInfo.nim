@@ -2,20 +2,16 @@ import libpe
 import libpe/hdr_optional
 import libpe/imports
 import libpe/exports
+import libpe/hashes
 import ctx
+import output
 import strformat
 import strutils
 import nancy
 import termstyle
 import times
 import signatures/susp
-
-template withTable(caption: string, body: untyped) = 
-  var table {.inject.}: TerminalTable
-  if caption.len > 0: table.add caption.bold
-  body
-  table.echoTable(80, padding = 4)
-  echo ""
+import cryptUtils
 
 proc getFilename(ctx: var pe_ctx_t): string {.inline.} =
   result = $ctx.path
@@ -31,17 +27,49 @@ proc getHeaderType(ctx: var pe_ctx_t): string {.inline.} =
   if ctx.pe.optional_hdr.`type` == 0x20b: result = "PE32+ (x64)"
   elif  ctx.pe.optional_hdr.`type` == 0x10b: result = "PE32 (x86)"
 
+proc getCompileTime(ctx: var pe_ctx_t): string {.inline.} =
+  result = $fromUnix(pe_coff(addr ctx).TimeDateStamp.int64).utc
+
+proc getColoredEntropy(ctx: var pe_ctx_t): string {.inline.} =
+  let ent = pe_calculate_entropy_file(addr ctx)
+  result = $ent.green
+  if ent > 7.5:
+    result = $ent.red
+  elif ent > 6.5:
+    result = $ent.yellow
+
+proc getSignature(ctx: var pe_ctx_t): string {.inline.} =
+  result = "-"
+  for dirType, dirVal in ctx.directories:
+    if dirType.int == 4 and dirVal.Size > 0:  # 4 -> IMAGE_DIRECTORY_ENTRY_SECURITY
+      return fmt"Present (unverified) @ {dirVal.VirtualAddress:#x}".yellow
+
 proc printSummary(ctx: var pe_ctx_t) =
   ## Print Summary
   ## TODO: packer detection
-  withTable "Summary":
+  var dirs: seq[string]
+  var sects: seq[string]
+  for dirType, _ in ctx.directories:
+    dirs.add $pe_directory_name(dirType)
+  for sec in ctx.sections:
+    sects.add $sec.Name
+  withTable "":
     table.add "File Name", ctx.getFilename
     table.add "File Size", $ctx.map_size & " bytes"
+    table.add "Compile Time", getCompileTime(ctx)
     table.add "Is DLL?", fmt"{pe_is_dll(addr ctx)}"
     table.add "Header", getHeaderType(ctx)
     table.add "Entrypoint", fmt"{ctx.pe.entrypoint:#x}"
-    table.add "Sections", fmt"{pe_sections_count(addr ctx)}"
-    table.add "Directories", fmt"{pe_directories_count(addr ctx)}"
+    table.add "Sections", sects.join(" ")
+    table.add "Directories", dirs.join(" ")
+    table.add "File Entropy", getColoredEntropy(ctx)
+    table.add "MD5", ctx.genHash("md5")
+    table.add "SHA1", ctx.genHash("sha1")
+    table.add "SHA256", ctx.genHash("sha256")
+    table.add "SSDEEP", ctx.genHash("ssdeep")
+    table.add "Imphash", $pe_imphash(addr ctx, LIBPE_IMPHASH_FLAVOR_PEFILE)
+    table.add "Signature", getSignature(ctx)
+
 
 proc printDosHeader(ctx: var pe_ctx_t) =
   let hDos = pe_dos(addr ctx)
