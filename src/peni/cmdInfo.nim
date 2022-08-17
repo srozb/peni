@@ -1,11 +1,14 @@
 import libpe
 import libpe/hdr_optional
+import libpe/imports
+import libpe/exports
 import ctx
 import strformat
 import strutils
 import nancy
 import termstyle
 import times
+import signatures/susp
 
 proc getFilename(ctx: var pe_ctx_t): string {.inline.} =
   result = $ctx.path
@@ -128,12 +131,37 @@ proc printSections(ctx: var pe_ctx_t) =
     table.echoTable(80, padding = 4)
     echo ""
 
-proc printDirectories(ctx: pe_ctx_t) =
-  discard
-proc printImports(ctx: pe_ctx_t) =
-  discard
-proc printExports(ctx: pe_ctx_t) =
-  discard
+proc printDirectories(ctx: var pe_ctx_t) =
+  var table: TerminalTable
+  table.add "Directories".bold, "Virtual Address", "Size"
+  for dirType, dirVal in ctx.directories:
+    table.add $pe_directory_name(dirType), fmt"{dirVal.VirtualAddress:#x}", $dirVal.Size
+  table.echoTable(80, padding = 4)
+  echo ""
+
+proc printImports(ctx: var pe_ctx_t) =
+  var table: TerminalTable
+  table.add "Imported Functions".bold
+  table.add "Library", "Function", "Hint"
+  for lib in pe_imports(addr ctx).items:
+    for fun in lib.items:
+      if $fun.name in suspImports: table.add $lib.name.yellow, $fun.name.yellow, $fun.hint.yellow
+      else:  table.add $lib.name, $fun.name, $fun.hint
+  table.echoTable(80, padding = 4)
+  echo ""
+
+proc printExports(ctx: var pe_ctx_t) =
+  let exps = pe_exports(addr ctx)
+  var table: TerminalTable
+  table.add "Exported Functions".bold
+  table.add "Library", "Function", "Fwd Name", "Address", "Ordinal"
+  for exp in exps.items:
+    if $exp.name in suspExports or $exp.fwd_name in suspExports:
+      table.add $exps.name.yellow, $exp.name.yellow, $exp.fwd_name.yellow, fmt"{exp.address:#x}".yellow, $exp.ordinal.yellow
+    else:
+      table.add $exps.name, $exp.name, $exp.fwd_name, fmt"{exp.address:#x}", $exp.ordinal
+  table.echoTable(80, padding = 4)
+  echo ""
 
 proc info*(all = false, summary = true, headers = false, sections = false, 
   directories = false, imports = false, exports = false, recursive = false,
