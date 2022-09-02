@@ -1,4 +1,5 @@
 import libpe
+import libpe/pe
 import libpe/hdr_optional
 import libpe/imports
 import libpe/exports

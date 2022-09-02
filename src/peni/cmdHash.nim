@@ -1,5 +1,6 @@
 import strformat
 import libpe
+import libpe/pe
 import libpe/hashes
 
 import ctx

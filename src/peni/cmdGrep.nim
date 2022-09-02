@@ -1,4 +1,5 @@
 import libpe
+import libpe/pe
 import libpe/imports
 import libpe/exports
 import strformat
@@ -23,7 +24,6 @@ proc matchExports(ctx: var pe_ctx_t, cPattern: Regex, ignoreCase: bool) =
     if ($exp.name).contains(cPattern):
       var msg = fmt"{ctx.path}," & fmt"{exp.address:#x}".blue & fmt":{exp.name} (export)"
       if COLOR: msg = msg.replacef(cPattern, "$1".red)
-      echo msg
 
 proc grep*(ignoreCase = false, imports = false, exports = false, pattern = "", 
   recursive = false, files: seq[string]) =
