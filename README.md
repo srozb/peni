@@ -15,6 +15,10 @@ matching specified import/export pattern. Consult examples to get the idea.
 
 ## Showcase
 
+![grep](docs/peni_grep.png)
+
+![info](docs/peni_info.png)
+
 ## Features/examples
 
 * Display comprehensive information regarding exe/dll `peni info -a [-r] <path>`
