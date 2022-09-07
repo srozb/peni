@@ -4,6 +4,8 @@ import libpe/hdr_optional
 import libpe/imports
 import libpe/exports
 import libpe/hashes
+import libpe/sections
+import libpe/directories
 import ctx
 import output
 import strformat
@@ -53,7 +55,7 @@ proc printSummary(ctx: var pe_ctx_t) =
   for dirType, _ in ctx.directories:
     dirs.add $pe_directory_name(dirType)
   for sec in ctx.sections:
-    sects.add $sec.Name
+    sects.add sec[].getName()
   withTable "":
     table.add "File Name", ctx.getFilename
     table.add "File Size", $ctx.map_size & " bytes"
@@ -130,6 +132,15 @@ proc printOptionalHeaderValues[T: ptr IMAGE_OPTIONAL_HEADER_32 | ptr IMAGE_OPTIO
     table.add "Size of image", fmt"{hOpt.SizeOfImage:#x}"
     table.add "Size of headers", fmt"{hOpt.SizeOfHeaders:#x}"
     table.add "Checksum", fmt"{hOpt.CheckSum:#x}"
+    table.add "Subsystem required", fmt"{hOpt.CheckSum:#x}"
+    table.add "Checksum", fmt"{hOpt.CheckSum:#x}"
+    table.add "DLL characteristics", fmt"{hOpt.DllCharacteristics:#x}"
+    table.add "DLL characteristics names", fmt"TODO"
+    table.add "Size of stack to reserve", fmt"{hOpt.SizeOfStackReserve:#x}"
+    table.add "Size of stack to commit", fmt"{hOpt.SizeOfStackCommit:#x}"
+    table.add "Size of heap space to reserve", fmt"{hOpt.SizeOfHeapReserve:#x}"
+    table.add "Size of heap space to commit", fmt"{hOpt.SizeOfHeapCommit:#x}"
+
 
 proc printOptionalHeader(ctx: var pe_ctx_t) =  # TODO: cleanup
   let hOpt = pe_optional(addr ctx)
@@ -145,21 +156,60 @@ proc printHeaders(ctx: var pe_ctx_t) =
   printOptionalHeader(ctx)
 
 proc printSections(ctx: var pe_ctx_t) =
+  const validFlags = @[
+    (IMAGE_SCN_CNT_CODE, "contains executable code"),
+    (IMAGE_SCN_CNT_INITIALIZED_DATA, "contains initialized data"),
+    (IMAGE_SCN_CNT_UNINITIALIZED_DATA, "contains uninitialized data"),
+    (IMAGE_SCN_GPREL, "contains data referenced through the GP"),
+    (IMAGE_SCN_LNK_NRELOC_OVFL, "contains extended relocations"),
+    (IMAGE_SCN_MEM_DISCARDABLE, "can be discarded as needed"),
+    (IMAGE_SCN_MEM_NOT_CACHED, "cannot be cached"),
+    (IMAGE_SCN_MEM_NOT_PAGED, "is not pageable"),
+    (IMAGE_SCN_MEM_SHARED, "can be shared in memory"),
+    (IMAGE_SCN_MEM_EXECUTE, "is executable"),
+    (IMAGE_SCN_MEM_READ, "is readable"),
+    (IMAGE_SCN_MEM_WRITE, "is writable")
+  ]
   for sec in ctx.sections:
+    var charNames: string
+    for flag in validFlags:
+      if bool(sec.Characteristics and flag[0].uint32):
+        charNames &= flag[1] & ", "
     withTable "Sections":
-      table.add "Section Name", $sec.Name.bold
+      table.add "Section Name", sec[].getName.bold
       table.add "Virtual Size", fmt"{sec.Misc.VirtualSize:#x}"
       table.add "Size Of Raw Data", fmt"{sec.SizeOfRawData:#x}"
       table.add "Pointer To Raw Data", fmt"{sec.PointerToRawData:#x}"
       table.add "Number Of Relocations", $sec.NumberOfRelocations
       table.add "Characteristics", fmt"{sec.Characteristics:#x}"
-      table.add "Characteristics Names", "TODO"
+      table.add "Characteristics Names", charNames
 
 proc printDirectories(ctx: var pe_ctx_t) =
+  const dirNames = @[
+    (IMAGE_DIRECTORY_ENTRY_EXPORT, "Export Table"),
+    (IMAGE_DIRECTORY_ENTRY_IMPORT, "Import Table"),
+    (IMAGE_DIRECTORY_ENTRY_RESOURCE, "Resource Table"),
+    (IMAGE_DIRECTORY_ENTRY_EXCEPTION, "Exception Table"),
+    (IMAGE_DIRECTORY_ENTRY_SECURITY, "Certificate Table"),
+    (IMAGE_DIRECTORY_ENTRY_BASERELOC, "Base Relocation Table"),
+    (IMAGE_DIRECTORY_ENTRY_DEBUG, "Debug"),
+    (IMAGE_DIRECTORY_ENTRY_ARCHITECTURE, "Architecture"),
+    (IMAGE_DIRECTORY_ENTRY_GLOBALPTR, "Global Ptr"),
+    (IMAGE_DIRECTORY_ENTRY_TLS, "Thread Local Storage (TLS)"),
+    (IMAGE_DIRECTORY_ENTRY_LOAD_CONFIG, "Load Config Table"),
+    (IMAGE_DIRECTORY_ENTRY_BOUND_IMPORT, "Bound Import"),
+    (IMAGE_DIRECTORY_ENTRY_IAT, "Import Address Table (IAT)"),
+    (IMAGE_DIRECTORY_ENTRY_DELAY_IMPORT, "Delay Import Descriptor"),
+    (IMAGE_DIRECTORY_ENTRY_COM_DESCRIPTOR, "CLR Runtime Header"),
+    (IMAGE_DIRECTORY_RESERVED, "")
+  ]
+  proc resolve(i: ImageDirectoryEntry): string =
+    for (dn, descr) in dirNames:
+      if dn == i: return descr
   withTable "Directories":
     table.add "Directory Name", "Virtual Address", "Size"
     for dirType, dirVal in ctx.directories:
-      table.add $pe_directory_name(dirType), fmt"{dirVal.VirtualAddress:#x}", $dirVal.Size
+      table.add resolve(dirType), fmt"{dirVal.VirtualAddress:#x}", $dirVal.Size
 
 proc printImports(ctx: var pe_ctx_t) =
   withTable "Imported Functions":
@@ -182,7 +232,7 @@ proc printExports(ctx: var pe_ctx_t) =
 proc info*(all = false, summary = true, headers = false, sections = false, 
   directories = false, imports = false, exports = false, recursive = false,
   files: seq[string]) =
-  ## Reads information about PE file.
+  ## Show PE file details.
   for c in files.peCtx(recursive=recursive):
     var ctx = c
     echo fmt"{ctx.path}:".magenta.bold
