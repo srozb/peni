@@ -20,5 +20,4 @@ jobs:
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
-          files: |
-            "peni-win64.zip"
+          files: "peni-win64.zip"
