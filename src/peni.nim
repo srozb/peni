@@ -5,6 +5,7 @@ import peni/cmdInfo
 import peni/cmdHash
 import peni/cmdGrep
 import peni/cmdEntropy
+import peni/cmdBaseline
 
 
 dispatchMulti(
@@ -32,17 +33,25 @@ dispatchMulti(
       "exports": 'E'
     }],
     [hash, help={
-    "imphash": "imphash",
-    "md5": "md5",
-    "sha1": "sha1",
-    "sha256": "sha256",
-    "ssdeep", "ssdeep",
-    "recursive": "be recursive"
+      "imphash": "imphash",
+      "md5": "md5",
+      "sha1": "sha1",
+      "sha256": "sha256",
+      "ssdeep", "ssdeep",
+      "recursive": "be recursive"
     }, short={
       "sha256": 'S',
       "ssdeep": 'd'
     }],
     [entropy, help={
-    "recursive": "be recursive"
+      "recursive": "be recursive"
+    }],
+    [baseline, help={
+      "recursive": "be recursive",
+      "bloomSize": "bloom filter expected capacity",
+      "errorRate": "bloom filter expected error-rate",
+      "nsrl": "convert nsrl filelist rather than generating a new filelist"
+    }, short={
+      "bloomSize": 's'
     }]
   )
