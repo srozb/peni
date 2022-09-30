@@ -15,11 +15,10 @@ jobs:
       - uses: actions/checkout@v3
       - uses: jiro4989/setup-nim-action@v1
       - run: nimble build -y
-
+      - run: zip -rD peni-win64.zip release windll
       - uses: "marvinpinto/action-automatic-releases@latest"
         with:
           repo_token: "${{ secrets.GITHUB_TOKEN }}"
           prerelease: false
           files: |
-            "peni.exe"
-            "windll/*.dll"
+            "peni-win64.zip"

@@ -5,6 +5,7 @@ author        = "srozb"
 description   = "PE tool based on libpe (with no S)"
 license       = "MIT"
 srcDir        = "src"
+binDir        = "release"
 bin           = @["peni"]
 
 
