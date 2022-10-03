@@ -1,6 +1,6 @@
 # Package
 
-version       = "0.3.3"
+version       = "0.3.4"
 author        = "srozb"
 description   = "PE tool based on libpe (with no S)"
 license       = "MIT"
