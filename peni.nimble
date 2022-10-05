@@ -11,4 +11,4 @@ bin           = @["peni"]
 
 # Dependencies
 
-requires "nim >= 1.6.6, libpe >= 0.3.3, cligen >= 1.5.24, nancy >= 0.1.0, termstyle >= 0.1.0, authenticode >= 0.1.1"
+requires "nim >= 1.6.6, libpe >= 0.3.4, cligen >= 1.5.24, nancy >= 0.1.0, termstyle >= 0.1.0, authenticode >= 0.1.1"
