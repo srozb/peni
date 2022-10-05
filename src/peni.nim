@@ -15,10 +15,12 @@ dispatchMulti(
     "directories": "directories",
     "imports": "imports",
     "exports": "exports",
+    "authenticode": "authenticode",
     "recursive": "be recursive",
     }, short = {
     "headers": 'H',
-    "sections": 'S'
+    "sections": 'S',
+    "authenticode": 'A'
   }
   ],
   [grep, help={

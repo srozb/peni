@@ -15,6 +15,8 @@ import termstyle
 import times
 import signatures/susp
 import cryptUtils
+import authenticode
+import authenticode/parser
 
 proc getFilename(ctx: var pe_ctx_t): string {.inline.} =
   result = $ctx.path
@@ -229,9 +231,45 @@ proc printExports(ctx: var pe_ctx_t) =
       else:
         table.add $exps.name, $exp.name, $exp.fwd_name, fmt"{exp.address:#x}", $exp.ordinal
 
+proc toTable(c: Certificate, t: var TerminalTable) =
+  t.add "Version", $c.version
+  t.add "Issuer", $c.issuer
+  t.add "Subject", $c.subject
+  t.add "Serial", $c.serial
+  t.add "SHA1", $c.sha1
+  t.add "SHA256", $c.sha256
+  t.add "Sign. algorithm", $c.sig_alg
+  t.add "Sign. algorithm OID", $c.sig_alg_oid
+  # t.add "Not Before", $c.not_before
+  # t.add "Not After", $c.not_after
+  t.add "Key algorithm", $c.key_alg
+  t.add "Key", $c.key
+
+proc printAuthenticode(ctx: var pe_ctx_t) =
+  initialize_authenticode_parser()
+  let sign = parse_authenticode(cast[ptr uint8](ctx.map_addr), ctx.map_size.uint)
+  if sign.isNil: return  # No authenticode present
+  var i,j,k = 0
+  for s in sign[].items:
+    i.inc
+    withTable fmt"Signature #{i}":
+      table.add "Version", $s[].version
+      table.add "Digest Algorithm", $s[].digest_alg
+      table.add "Digest", $s[].digest
+      for signer in s.signer.chain[].items:
+        j.inc
+        table.add fmt"Signer #{j}".bold
+        signer[].toTable(table)
+      j = 0
+      for cert in s.certs[].items:
+        k.inc
+        table.add fmt"Cert #{k}".bold
+        cert[].toTable(table)
+      k = 0
+
 proc info*(all = false, summary = true, headers = false, sections = false, 
-  directories = false, imports = false, exports = false, recursive = false,
-  files: seq[string]) =
+  directories = false, imports = false, exports = false, authenticode = false, 
+  recursive = false, files: seq[string]) =
   ## Show PE file details.
   for c in files.peCtx(recursive=recursive):
     var ctx = c
@@ -242,3 +280,4 @@ proc info*(all = false, summary = true, headers = false, sections = false,
     if all or directories: printDirectories(ctx)
     if all or imports: printImports(ctx)
     if all or exports: printExports(ctx)
+    if all or authenticode: printAuthenticode(ctx)
