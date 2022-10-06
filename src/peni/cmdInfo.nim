@@ -240,8 +240,8 @@ proc toTable(c: Certificate, t: var TerminalTable) =
   t.add "SHA256", $c.sha256
   t.add "Sign. algorithm", $c.sig_alg
   t.add "Sign. algorithm OID", $c.sig_alg_oid
-  # t.add "Not Before", $c.not_before
-  # t.add "Not After", $c.not_after
+  t.add "Not Before", $fromUnix(cast[int64](c.not_before)).utc
+  t.add "Not After", $fromUnix(cast[int64](c.not_after)).utc
   t.add "Key algorithm", $c.key_alg
   t.add "Key", $c.key
 
