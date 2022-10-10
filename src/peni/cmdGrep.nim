@@ -3,7 +3,7 @@ import libpe/pe
 import libpe/imports
 import libpe/exports
 import strformat
-import std/re
+import regex
 import termstyle
 
 import ctx
@@ -16,22 +16,22 @@ proc matchImports(ctx: var pe_ctx_t, cPattern: Regex, ignoreCase: bool) =
       let qName = fmt"{imp.name}!{fun.name}"
       if qName.contains(cPattern):
         var msg = fmt"{ctx.path}:{qName} (import)"
-        if COLOR: msg = msg.replacef(cPattern, "$1".red)
+        if COLOR: msg = msg.replace(cPattern, "$1".red)
         echo msg
 
 proc matchExports(ctx: var pe_ctx_t, cPattern: Regex, ignoreCase: bool) = 
   for exp in pe_exports(addr ctx).items:
     if ($exp.name).contains(cPattern):
       var msg = fmt"{ctx.path}," & fmt"{exp.address:#x}".blue & fmt":{exp.name} (export)"
-      if COLOR: msg = msg.replacef(cPattern, "$1".red)
+      if COLOR: msg = msg.replace(cPattern, "$1".red)
 
 proc grep*(ignoreCase = false, imports = false, exports = false, pattern = "", 
   recursive = false, files: seq[string]) =
   ## Search files of given criteria
   for c in files.peCtx(recursive=recursive):
     var ctx = c
-    var flags = {reStudy, reExtended}
-    if ignoreCase: flags.incl(reIgnoreCase)
-    let cPattern = re("(" & pattern & ")", flags)
+    var flags = ""
+    if ignoreCase: flags = "(?i)"
+    let cPattern = re(flags & "(" & pattern & ")")
     if imports: ctx.matchImports(cPattern, ignoreCase)
     if exports: ctx.matchExports(cPattern, ignoreCase)
