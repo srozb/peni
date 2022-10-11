@@ -24,11 +24,13 @@ dispatchMulti(
   }
   ],
   [grep, help={
+    "authenticode": "in authenticode",
     "imports": "in imports",
     "exports": "in exports",
     "pattern": "pattern to match with",
     "recursive": "be recursive"
   }, short={
+    "authenticode": 'A',
     "imports": 'I',
     "exports": 'E'
   }],

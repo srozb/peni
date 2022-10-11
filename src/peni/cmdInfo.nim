@@ -266,6 +266,7 @@ proc printAuthenticode(ctx: var pe_ctx_t) =
         table.add fmt"Cert #{k}".bold
         cert[].toTable(table)
       k = 0
+  authenticode_array_free(sign)
 
 proc info*(all = false, summary = true, headers = false, sections = false, 
   directories = false, imports = false, exports = false, authenticode = false, 
